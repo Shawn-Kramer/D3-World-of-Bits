@@ -1,6 +1,7 @@
 [x] Import Leaflet and set up map
 [x] Set up grid system
-[ ] Set up token spawning system
+[x] Set up token spawning system
+[ ] Randomize token spawns
 [ ] Create the player
 [ ] Player interaction with cells
 [ ] Set up inventory system
