@@ -142,10 +142,11 @@ function renderGrid(): void {
       const key = getCellKey(cell);
       const tokenValue = gameState.cellTokens.get(key);
       const bounds = cellBounds(cell);
+      const interactable = isInteractable(cell);
 
       // Draw cell rectangle
       const rect = leaflet.rectangle(bounds, {
-        color: "#3388ff",
+        color: interactable ? "#3388ff" : "#888",
         weight: 1,
         fillOpacity: tokenValue !== undefined ? 0.3 : 0.1,
       });
@@ -194,6 +195,20 @@ function updateInventoryDisplay(): void {
   }
 }
 */
+
+// ============================================================================
+// TILE INTERACTION
+// ============================================================================
+
+// Calculate distance between two cells
+function cellDistance(a: Cell, b: Cell): number {
+  return Math.max(Math.abs(a.i - b.i), Math.abs(a.j - b.j));
+}
+
+// Check if a cell is close enough to interact with
+function isInteractable(cell: Cell): boolean {
+  return cellDistance(cell, gameState.playerLocation) <= 3;
+}
 
 // ============================================================================
 // INITIALIZE GAME
