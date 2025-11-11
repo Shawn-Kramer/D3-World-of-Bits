@@ -185,6 +185,7 @@ interface GameState {
   cellTokens: Map<string, number>;
 }
 
+/*
 function updateInventoryDisplay(): void {
   if (gameState.playerInventory === null) {
     inventoryDiv.innerHTML = "Inventory: Empty";
@@ -192,6 +193,7 @@ function updateInventoryDisplay(): void {
     inventoryDiv.innerHTML = `Inventory: Token (${gameState.playerInventory})`;
   }
 }
+*/
 
 // ============================================================================
 // INITIALIZE GAME
