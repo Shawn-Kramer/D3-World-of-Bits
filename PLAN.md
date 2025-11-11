@@ -4,8 +4,8 @@
 [x] Set up grid system
 [x] Set up token spawning system
 [ ] Randomize token spawns
-[ ] Create the player
+[x] Create the player
+[x] Set up inventory system
 [ ] Player interaction with cells
-[ ] Set up inventory system
 [ ] Set up crafting system
 [ ] Create a win condition

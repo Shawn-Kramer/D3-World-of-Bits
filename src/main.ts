@@ -33,6 +33,8 @@ interface GameState {
 // GAME STATE
 // ============================================================================
 const gameState: GameState = {
+  playerLocation: latLngToCell(CLASSROOM_LOCATION),
+  playerInventory: null,
   cellTokens: new Map(),
 };
 
@@ -163,6 +165,31 @@ function renderGrid(): void {
         label.addTo(map);
       }
     }
+  }
+}
+
+// ============================================================================
+// PLAYER INVENTORY UI
+// ============================================================================
+
+// Create inventory display
+const inventoryDiv = document.createElement("div");
+inventoryDiv.id = "inventory";
+inventoryDiv.innerHTML = "Inventory: Empty";
+document.body.appendChild(inventoryDiv);
+
+// Update game state to track inventory
+interface GameState {
+  playerLocation: Cell;
+  playerInventory: number | null; // null = empty, number = token value
+  cellTokens: Map<string, number>;
+}
+
+function updateInventoryDisplay(): void {
+  if (gameState.playerInventory === null) {
+    inventoryDiv.innerHTML = "Inventory: Empty";
+  } else {
+    inventoryDiv.innerHTML = `Inventory: Token (${gameState.playerInventory})`;
   }
 }
 
