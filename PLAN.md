@@ -1,3 +1,5 @@
+# PLAN
+
 [x] Import Leaflet and set up map
 [x] Set up grid system
 [x] Set up token spawning system
