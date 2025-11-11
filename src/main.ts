@@ -71,10 +71,12 @@ function cellBounds(cell: Cell): leaflet.LatLngBounds {
   ]);
 }
 
+/*
 // Create a unique key for each cell
 function getCellKey(cell: Cell): string {
   return `${cell.i},${cell.j}`;
 }
+*/
 
 // Draw grid around player
 function renderGrid(): void {

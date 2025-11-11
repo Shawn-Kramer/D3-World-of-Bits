@@ -1,5 +1,5 @@
 [x] Import Leaflet and set up map
-[ ] Set up grid system
+[x] Set up grid system
 [ ] Set up token spawning system
 [ ] Create the player
 [ ] Player interaction with cells
