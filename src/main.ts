@@ -193,7 +193,8 @@ function renderGrid(): void {
         const label = leaflet.marker(center, {
           icon: leaflet.divIcon({
             className: "token-label",
-            html: `<div style="font-weight: bold; color: black; background: white; padding: 2px 6px; border-radius: 3px;">${tokenValue}</div>`,
+            html:
+              `<div style="font-weight: bold; color: black; background: white; padding: 2px 6px; border-radius: 3px;">${tokenValue}</div>`,
             iconSize: [30, 30],
           }),
         });
@@ -228,8 +229,7 @@ function handleCellClick(cell: Cell): void {
     } else {
       alert("This cell is empty!");
     }
-  }
-  // Crafting logic
+  } // Crafting logic
   else {
     if (cellToken === undefined) {
       alert("Cannot place token in empty cell. Need matching token to craft!");
