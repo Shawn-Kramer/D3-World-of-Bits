@@ -26,16 +26,20 @@ interface Cell {
 }
 
 interface GameState {
+  playerLocation: Cell;
+  playerInventory: number | null; // null = empty, number = token value
   cellTokens: Map<string, number>; // key: "i,j", value: token value
+  initializedCells: Set<string>; // Track which cells we've already initialized
 }
 
 // ============================================================================
 // GAME STATE
 // ============================================================================
 const gameState: GameState = {
-  playerLocation: latLngToCell(CLASSROOM_LOCATION),
+  playerLocation: { i: 0, j: 0 }, // Will be set properly below
   playerInventory: null,
   cellTokens: new Map(),
+  initializedCells: new Set(),
 };
 
 // ============================================================================
@@ -72,6 +76,16 @@ function cellBounds(cell: Cell): leaflet.LatLngBounds {
   ]);
 }
 
+// Calculate distance between two cells
+function cellDistance(a: Cell, b: Cell): number {
+  return Math.max(Math.abs(a.i - b.i), Math.abs(a.j - b.j));
+}
+
+// Check if a cell is close enough to interact with
+function isInteractable(cell: Cell): boolean {
+  return cellDistance(cell, gameState.playerLocation) <= 3;
+}
+
 // ============================================================================
 // TOKEN SPAWNING
 // ============================================================================
@@ -82,10 +96,20 @@ function shouldCellHaveToken(cell: Cell): boolean {
   return luck(key) < CACHE_SPAWN_PROBABILITY;
 }
 
-// Initialize a cell's token if it should have one
+// Initialize a cell's token if it should have one (only once per cell ever)
 function initializeCellToken(cell: Cell): void {
   const key = getCellKey(cell);
-  if (shouldCellHaveToken(cell) && !gameState.cellTokens.has(key)) {
+
+  // Skip if we've already initialized this cell
+  if (gameState.initializedCells.has(key)) {
+    return;
+  }
+
+  // Mark as initialized
+  gameState.initializedCells.add(key);
+
+  // Add token if luck determines it should have one
+  if (shouldCellHaveToken(cell)) {
     gameState.cellTokens.set(key, 1); // Start with value 1
   }
 }
@@ -121,13 +145,49 @@ const playerMarker = leaflet.marker(CLASSROOM_LOCATION);
 playerMarker.bindTooltip("You are here");
 playerMarker.addTo(map);
 
+// Set player location after latLngToCell is defined
+gameState.playerLocation = latLngToCell(CLASSROOM_LOCATION);
+
+// ============================================================================
+// PLAYER INVENTORY UI
+// ============================================================================
+
+// Create inventory display
+const inventoryDiv = document.createElement("div");
+inventoryDiv.id = "inventory";
+inventoryDiv.innerHTML = "Inventory: Empty";
+document.body.appendChild(inventoryDiv);
+
+function updateInventoryDisplay(): void {
+  if (gameState.playerInventory === null) {
+    inventoryDiv.innerHTML = "Inventory: Empty";
+  } else {
+    inventoryDiv.innerHTML = `Inventory: Token (${gameState.playerInventory})`;
+  }
+}
+
 // ============================================================================
 // GRID RENDERING
 // ============================================================================
 
+// Keep track of all grid elements so we can clear them
+const gridElements: leaflet.Layer[] = [];
+
 // Draw grid around player
 function renderGrid(): void {
-  const playerCell = latLngToCell(CLASSROOM_LOCATION);
+  console.log(
+    "Rendering grid, cellTokens has",
+    gameState.cellTokens.size,
+    "tokens",
+  );
+
+  // Clear the old grid - remove all elements
+  gridElements.forEach((element) => {
+    map.removeLayer(element);
+  });
+  gridElements.length = 0; // Clear the array
+
+  const playerCell = gameState.playerLocation;
 
   for (let di = -NEIGHBORHOOD_SIZE; di <= NEIGHBORHOOD_SIZE; di++) {
     for (let dj = -NEIGHBORHOOD_SIZE; dj <= NEIGHBORHOOD_SIZE; dj++) {
@@ -136,7 +196,7 @@ function renderGrid(): void {
         j: playerCell.j + dj,
       };
 
-      // Initialize token if needed
+      // Initialize token if needed (only happens once per cell)
       initializeCellToken(cell);
 
       const key = getCellKey(cell);
@@ -151,6 +211,10 @@ function renderGrid(): void {
         fillOpacity: tokenValue !== undefined ? 0.3 : 0.1,
       });
       rect.addTo(map);
+      gridElements.push(rect); // Track it
+
+      // Add click handler
+      rect.on("click", () => handleCellClick(cell));
 
       // Display token value if present
       if (tokenValue !== undefined) {
@@ -164,53 +228,48 @@ function renderGrid(): void {
           }),
         });
         label.addTo(map);
+        gridElements.push(label); // Track it
       }
     }
   }
 }
 
 // ============================================================================
-// PLAYER INVENTORY UI
+// CELL INTERACTION
 // ============================================================================
 
-// Create inventory display
-const inventoryDiv = document.createElement("div");
-inventoryDiv.id = "inventory";
-inventoryDiv.innerHTML = "Inventory: Empty";
-document.body.appendChild(inventoryDiv);
+function handleCellClick(cell: Cell): void {
+  console.log("Cell clicked:", cell);
 
-// Update game state to track inventory
-interface GameState {
-  playerLocation: Cell;
-  playerInventory: number | null; // null = empty, number = token value
-  cellTokens: Map<string, number>;
-}
-
-/*
-function updateInventoryDisplay(): void {
-  if (gameState.playerInventory === null) {
-    inventoryDiv.innerHTML = "Inventory: Empty";
-  } else {
-    inventoryDiv.innerHTML = `Inventory: Token (${gameState.playerInventory})`;
+  if (!isInteractable(cell)) {
+    alert("Cell is too far away!");
+    return;
   }
-}
-*/
 
-// ============================================================================
-// TILE INTERACTION
-// ============================================================================
+  const key = getCellKey(cell);
+  const cellToken = gameState.cellTokens.get(key);
 
-// Calculate distance between two cells
-function cellDistance(a: Cell, b: Cell): number {
-  return Math.max(Math.abs(a.i - b.i), Math.abs(a.j - b.j));
-}
+  console.log("Cell key:", key, "Token value:", cellToken);
 
-// Check if a cell is close enough to interact with
-function isInteractable(cell: Cell): boolean {
-  return cellDistance(cell, gameState.playerLocation) <= 3;
+  // If player has no token, try to pick up
+  if (gameState.playerInventory === null) {
+    if (cellToken !== undefined) {
+      console.log("Picking up token:", cellToken);
+      gameState.playerInventory = cellToken;
+      gameState.cellTokens.delete(key);
+      console.log("Token deleted, inventory now:", gameState.playerInventory);
+      updateInventoryDisplay();
+      renderGrid();
+    } else {
+      alert("This cell is empty!");
+    }
+  } else {
+    alert("You already have a token! (Crafting not implemented yet)");
+  }
 }
 
 // ============================================================================
 // INITIALIZE GAME
 // ============================================================================
 renderGrid();
+updateInventoryDisplay();
