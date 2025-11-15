@@ -15,5 +15,6 @@
 ## D3.b
 
 [x] Update token spawning sytem for D3.b
-[ ] Implement movement
-[ ] Update UI
+[X] Implement movement
+[X] Update UI
+A lot of D3.b already got completed in D3.a. Oops!

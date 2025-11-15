@@ -16,7 +16,7 @@ const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 0.0001;
 const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
-const TARGET_TOKEN_VALUE = 16; // Win condition
+const TARGET_TOKEN_VALUE = 32; // Win condition
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -110,7 +110,6 @@ function initializeCellToken(cell: Cell): void {
 function initializeCellToken(cell: Cell): void {
   const key = getCellKey(cell);
 
-  // Only add if not already tracked (memoryless - will respawn)
   if (!gameState.cellTokens.has(key)) {
     if (shouldCellHaveToken(cell)) {
       gameState.cellTokens.set(key, 1);
@@ -162,6 +161,62 @@ function updateInventoryDisplay(): void {
     inventoryDiv.innerHTML = `Inventory: Token (${gameState.playerInventory})`;
   }
 }
+
+// ============================================================================
+// MOVEMENT CONTROLS
+// ============================================================================
+
+const controlPanel = document.createElement("div");
+controlPanel.id = "controls";
+controlPanel.innerHTML = `
+  <button id="north">⬆️ North</button>
+  <button id="south">⬇️ South</button>
+  <button id="west">⬅️ West</button>
+  <button id="east">➡️ East</button>
+  <button id="reset">🏠 Reset</button>
+`;
+document.body.appendChild(controlPanel);
+
+function movePlayer(di: number, dj: number): void {
+  // Update player location
+  gameState.playerLocation.i += di;
+  gameState.playerLocation.j += dj;
+
+  // Update player marker position on map
+  const newLatLng = cellToLatLng(gameState.playerLocation);
+  playerMarker.setLatLng(newLatLng);
+
+  // Center map on new player location
+  map.panTo(newLatLng);
+
+  // Re-render grid around new location
+  renderGrid();
+}
+
+// Attach event listeners to buttons
+document.getElementById("north")!.addEventListener("click", () => {
+  movePlayer(1, 0); // Move north (increase latitude)
+});
+
+document.getElementById("south")!.addEventListener("click", () => {
+  movePlayer(-1, 0); // Move south (decrease latitude)
+});
+
+document.getElementById("west")!.addEventListener("click", () => {
+  movePlayer(0, -1); // Move west (decrease longitude)
+});
+
+document.getElementById("east")!.addEventListener("click", () => {
+  movePlayer(0, 1); // Move east (increase longitude)
+});
+
+document.getElementById("reset")!.addEventListener("click", () => {
+  // Reset to classroom location
+  gameState.playerLocation = latLngToCell(CLASSROOM_LOCATION);
+  playerMarker.setLatLng(CLASSROOM_LOCATION);
+  map.setView(CLASSROOM_LOCATION, GAMEPLAY_ZOOM_LEVEL);
+  renderGrid();
+});
 
 // ============================================================================
 // GRID RENDERING
