@@ -30,7 +30,7 @@ interface GameState {
   playerLocation: Cell;
   playerInventory: number | null;
   cellTokens: Map<string, number>;
-  initializedCells: Set<string>;
+  // initializedCells: Set<string>;
 }
 
 // ============================================================================
@@ -40,7 +40,7 @@ const gameState: GameState = {
   playerLocation: { i: 0, j: 0 },
   playerInventory: null,
   cellTokens: new Map(),
-  initializedCells: new Set(),
+  // initializedCells: new Set(),
 };
 
 // ============================================================================
@@ -90,6 +90,7 @@ function shouldCellHaveToken(cell: Cell): boolean {
   return luck(key) < CACHE_SPAWN_PROBABILITY;
 }
 
+/* Remembers token values when you leave their range
 function initializeCellToken(cell: Cell): void {
   const key = getCellKey(cell);
 
@@ -101,6 +102,19 @@ function initializeCellToken(cell: Cell): void {
 
   if (shouldCellHaveToken(cell)) {
     gameState.cellTokens.set(key, 1);
+  }
+}
+*/
+
+// Does not remember token values when you leave their range
+function initializeCellToken(cell: Cell): void {
+  const key = getCellKey(cell);
+
+  // Only add if not already tracked (memoryless - will respawn)
+  if (!gameState.cellTokens.has(key)) {
+    if (shouldCellHaveToken(cell)) {
+      gameState.cellTokens.set(key, 1);
+    }
   }
 }
 
