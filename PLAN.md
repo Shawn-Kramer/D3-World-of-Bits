@@ -18,3 +18,9 @@
 [X] Implement movement
 [X] Update UI
 A lot of D3.b already got completed in D3.a. Oops!
+
+## D3.c
+
+[x] Implement a cache
+[ ] Update token initialization
+[ ] Update click handler to save token states
