@@ -288,6 +288,10 @@ function handleCellClick(cell: Cell): void {
     if (cellToken !== undefined) {
       gameState.playerInventory = cellToken;
       gameState.cellTokens.delete(key);
+
+      // Save to cache: this cell has been picked up (0 coins)
+      saveCell(cell, 0);
+
       updateInventoryDisplay();
       renderGrid();
       checkWinCondition();
@@ -302,6 +306,10 @@ function handleCellClick(cell: Cell): void {
       const newValue = cellToken * 2;
       gameState.cellTokens.set(key, newValue);
       gameState.playerInventory = null;
+
+      // Save to cache: this cell now has a crafted token
+      saveCell(cell, newValue);
+
       updateInventoryDisplay();
       renderGrid();
       alert(`✨ Crafted token of value ${newValue}!`);
@@ -341,7 +349,7 @@ interface CellMemento {
 const cellCache = new Map<string, CellMemento>();
 
 // Save a cell's state to the cache (Memento pattern)
-function _saveCell(cell: Cell, coins: number): void {
+function saveCell(cell: Cell, coins: number): void {
   const key = getCellKey(cell);
   cellCache.set(key, { i: cell.i, j: cell.j, coins });
 }

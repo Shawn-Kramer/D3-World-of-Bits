@@ -23,4 +23,5 @@ A lot of D3.b already got completed in D3.a. Oops!
 
 [x] Implement a cache
 [x] Update token initialization to check cache before generating default state
-[ ] Update click handler to save token states
+[x] Update click handler to save token states
+[ ] Refactor grid rendering to keep memory clean
