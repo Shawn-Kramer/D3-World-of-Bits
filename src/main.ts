@@ -227,6 +227,9 @@ function renderGrid(): void {
 
   const playerCell = gameState.playerLocation;
 
+  // Track which cells are currently visible
+  const visibleCells = new Set<string>();
+
   for (let di = -NEIGHBORHOOD_SIZE; di <= NEIGHBORHOOD_SIZE; di++) {
     for (let dj = -NEIGHBORHOOD_SIZE; dj <= NEIGHBORHOOD_SIZE; dj++) {
       const cell: Cell = {
@@ -234,9 +237,11 @@ function renderGrid(): void {
         j: playerCell.j + dj,
       };
 
+      const key = getCellKey(cell);
+      visibleCells.add(key);
+
       initializeCellToken(cell);
 
-      const key = getCellKey(cell);
       const tokenValue = gameState.cellTokens.get(key);
       const bounds = cellBounds(cell);
       const interactable = isInteractable(cell);
@@ -268,6 +273,15 @@ function renderGrid(): void {
       }
     }
   }
+
+  // Clean up off-screen cells from active memory
+  const cellsToRemove: string[] = [];
+  gameState.cellTokens.forEach((_, key) => {
+    if (!visibleCells.has(key)) {
+      cellsToRemove.push(key);
+    }
+  });
+  cellsToRemove.forEach((key) => gameState.cellTokens.delete(key));
 }
 
 // ============================================================================
@@ -360,11 +374,13 @@ function loadCell(cell: Cell): CellMemento | null {
   return cellCache.get(key) || null;
 }
 
+/*
 // Remove a cell from the cache (when picked up completely)
-function _removeCell(cell: Cell): void {
+function removeCell(cell: Cell): void {
   const key = getCellKey(cell);
   cellCache.delete(key);
 }
+*/
 
 // ============================================================================
 // INITIALIZATION
