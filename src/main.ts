@@ -88,11 +88,25 @@ function shouldCellHaveToken(cell: Cell): boolean {
   return luck(key) < CACHE_SPAWN_PROBABILITY;
 }
 
-// Does not remember token values when you leave their range
+// Initialize cell - first check cache, then generate default
 function initializeCellToken(cell: Cell): void {
   const key = getCellKey(cell);
 
-  if (!gameState.cellTokens.has(key)) {
+  // Skip if already in current view
+  if (gameState.cellTokens.has(key)) {
+    return;
+  }
+
+  // Check if this cell has been modified (in cache)
+  const cached = loadCell(cell);
+  if (cached !== null) {
+    // Restore from cache (Memento pattern)
+    if (cached.coins > 0) {
+      gameState.cellTokens.set(key, cached.coins);
+    }
+    // If coins === 0, cell was picked up, so don't add it
+  } else {
+    // Generate default state (Flyweight pattern - not stored)
     if (shouldCellHaveToken(cell)) {
       gameState.cellTokens.set(key, 1);
     }
@@ -333,7 +347,7 @@ function _saveCell(cell: Cell, coins: number): void {
 }
 
 // Load a cell's state from the cache, or null if not cached
-function _loadCell(cell: Cell): CellMemento | null {
+function loadCell(cell: Cell): CellMemento | null {
   const key = getCellKey(cell);
   return cellCache.get(key) || null;
 }
