@@ -22,5 +22,5 @@ A lot of D3.b already got completed in D3.a. Oops!
 ## D3.c
 
 [x] Implement a cache
-[x] Update token initialization
+[x] Update token initialization to check cache before generating default state
 [ ] Update click handler to save token states
