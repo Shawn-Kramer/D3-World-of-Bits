@@ -83,3 +83,41 @@ body {
 #controls button:active {
   background: #e0e0e0;
 }
+
+#game-controls {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#game-controls label {
+  display: block;
+  margin: 5px 0;
+  cursor: pointer;
+}
+
+#game-controls input[type="radio"] {
+  margin-right: 5px;
+}
+
+#game-controls button {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  transition: background 0.2s;
+}
+
+#game-controls button:hover {
+  background: #f0f0f0;
+}

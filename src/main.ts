@@ -159,6 +159,200 @@ function updateInventoryDisplay(): void {
 }
 
 // ============================================================================
+// MOVEMENT SYSTEM (Facade Pattern)
+// ============================================================================
+
+// Facade interface for different movement implementations
+interface MovementProvider {
+  enable(): void;
+  disable(): void;
+}
+
+// Button-based movement implementation
+class ButtonMovement implements MovementProvider {
+  private controlPanel: HTMLDivElement;
+
+  constructor() {
+    this.controlPanel = document.createElement("div");
+    this.controlPanel.id = "controls";
+    this.controlPanel.innerHTML = `
+      <button id="north">⬆️ North</button>
+      <button id="south">⬇️ South</button>
+      <button id="west">⬅️ West</button>
+      <button id="east">➡️ East</button>
+      <button id="reset">🏠 Reset</button>
+    `;
+  }
+
+  enable(): void {
+    document.body.appendChild(this.controlPanel);
+
+    document.getElementById("north")!.addEventListener("click", () => {
+      movePlayer(1, 0);
+    });
+
+    document.getElementById("south")!.addEventListener("click", () => {
+      movePlayer(-1, 0);
+    });
+
+    document.getElementById("west")!.addEventListener("click", () => {
+      movePlayer(0, -1);
+    });
+
+    document.getElementById("east")!.addEventListener("click", () => {
+      movePlayer(0, 1);
+    });
+
+    document.getElementById("reset")!.addEventListener("click", () => {
+      gameState.playerLocation = latLngToCell(CLASSROOM_LOCATION);
+      playerMarker.setLatLng(CLASSROOM_LOCATION);
+      map.setView(CLASSROOM_LOCATION, GAMEPLAY_ZOOM_LEVEL);
+      saveGameState();
+      renderGrid();
+    });
+  }
+
+  disable(): void {
+    this.controlPanel.remove();
+  }
+}
+
+// Geolocation-based movement implementation
+class GeolocationMovement implements MovementProvider {
+  private watchId: number | null = null;
+
+  enable(): void {
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported by your browser");
+      return;
+    }
+
+    // Watch player's real-world position
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLocation = latLngToCell(leaflet.latLng(latitude, longitude));
+
+        // Only update if player moved to a different cell
+        if (
+          newLocation.i !== gameState.playerLocation.i ||
+          newLocation.j !== gameState.playerLocation.j
+        ) {
+          gameState.playerLocation = newLocation;
+
+          const newLatLng = cellToLatLng(newLocation);
+          playerMarker.setLatLng(newLatLng);
+          map.panTo(newLatLng);
+
+          saveGameState();
+          renderGrid();
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert("Could not get your location. Please enable location services.");
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 5000,
+      },
+    );
+  }
+
+  disable(): void {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+  }
+}
+
+// Shared movement function used by all providers
+function movePlayer(di: number, dj: number): void {
+  gameState.playerLocation.i += di;
+  gameState.playerLocation.j += dj;
+
+  const newLatLng = cellToLatLng(gameState.playerLocation);
+  playerMarker.setLatLng(newLatLng);
+  map.panTo(newLatLng);
+
+  saveGameState();
+  renderGrid();
+}
+
+// ============================================================================
+// GAME CONTROLS UI
+// ============================================================================
+
+const gameControls = document.createElement("div");
+gameControls.id = "game-controls";
+gameControls.innerHTML = `
+  <div>
+    <label>
+      <input type="radio" name="movement" value="buttons" checked> 🎮 Buttons
+    </label>
+    <label>
+      <input type="radio" name="movement" value="geo"> 🌍 Geolocation
+    </label>
+  </div>
+  <button id="reset-game">🔄 New Game</button>
+`;
+document.body.appendChild(gameControls);
+
+// Movement providers
+let currentMovement: MovementProvider | null = null;
+const buttonMovement = new ButtonMovement();
+const geoMovement = new GeolocationMovement();
+
+// Check URL parameter for initial movement mode
+const urlParams = new URLSearchParams(globalThis.location.search);
+const movementMode = urlParams.get("movement") || "buttons";
+
+function switchMovementMode(mode: string): void {
+  // Disable current movement
+  if (currentMovement) {
+    currentMovement.disable();
+  }
+
+  // Enable new movement
+  if (mode === "geo") {
+    currentMovement = geoMovement;
+    geoMovement.enable();
+  } else {
+    currentMovement = buttonMovement;
+    buttonMovement.enable();
+  }
+}
+
+// Radio button listeners
+document.querySelectorAll('input[name="movement"]').forEach((radio) => {
+  radio.addEventListener("change", (e) => {
+    const target = e.target as HTMLInputElement;
+    switchMovementMode(target.value);
+  });
+});
+
+// Reset game button
+document.getElementById("reset-game")!.addEventListener("click", () => {
+  if (
+    confirm(
+      "Are you sure you want to start a new game? All progress will be lost.",
+    )
+  ) {
+    resetGameState();
+  }
+});
+
+// Set initial movement mode
+if (movementMode === "geo") {
+  (document.querySelector('input[value="geo"]') as HTMLInputElement).checked =
+    true;
+}
+switchMovementMode(movementMode);
+
+/*
+// ============================================================================
 // MOVEMENT CONTROLS
 // ============================================================================
 
@@ -214,6 +408,7 @@ document.getElementById("reset")!.addEventListener("click", () => {
   map.setView(CLASSROOM_LOCATION, GAMEPLAY_ZOOM_LEVEL);
   renderGrid();
 });
+*/
 
 // ============================================================================
 // GRID RENDERING
@@ -431,7 +626,7 @@ function _loadGameState(): boolean {
   }
 }
 
-function _resetGameState(): void {
+function resetGameState(): void {
   // Clear everything
   localStorage.removeItem(SAVE_KEY);
   gameState.playerLocation = latLngToCell(CLASSROOM_LOCATION);

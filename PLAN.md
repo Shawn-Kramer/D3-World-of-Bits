@@ -30,6 +30,6 @@ A lot of D3.b already got completed in D3.a. Oops!
 
 [x] Implement localStorage
 [x] Save states
-[ ] Update movement system
-[ ] Add movement toggle UI
+[x] Update movement system
+[x] Add movement toggle UI
 [ ] Load save on startup
