@@ -32,4 +32,4 @@ A lot of D3.b already got completed in D3.a. Oops!
 [x] Save states
 [x] Update movement system
 [x] Add movement toggle UI
-[ ] Load save on startup
+[x] Load save on startup

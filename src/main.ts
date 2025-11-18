@@ -601,7 +601,7 @@ function saveGameState(): void {
   localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
 
-function _loadGameState(): boolean {
+function loadGameState(): boolean {
   const saved = localStorage.getItem(SAVE_KEY);
   if (!saved) return false;
 
@@ -645,5 +645,21 @@ function resetGameState(): void {
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
-renderGrid();
+
+// Try to load saved game
+const loaded = loadGameState();
+
+if (loaded) {
+  // Restore player position on map
+  const playerLatLng = cellToLatLng(gameState.playerLocation);
+  playerMarker.setLatLng(playerLatLng);
+  map.setView(playerLatLng, GAMEPLAY_ZOOM_LEVEL);
+  console.log("Game loaded from save");
+} else {
+  // New game
+  gameState.playerLocation = latLngToCell(CLASSROOM_LOCATION);
+  console.log("Starting new game");
+}
+
 updateInventoryDisplay();
+renderGrid();
