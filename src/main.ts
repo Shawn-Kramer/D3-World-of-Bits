@@ -185,6 +185,7 @@ function movePlayer(di: number, dj: number): void {
   // Center map on new player location
   map.panTo(newLatLng);
 
+  saveGameState();
   // Re-render grid around new location
   renderGrid();
 }
@@ -306,6 +307,7 @@ function handleCellClick(cell: Cell): void {
       // Save to cache: this cell has been picked up (0 coins)
       saveCell(cell, 0);
 
+      saveGameState();
       updateInventoryDisplay();
       renderGrid();
       checkWinCondition();
@@ -324,6 +326,7 @@ function handleCellClick(cell: Cell): void {
       // Save to cache: this cell now has a crafted token
       saveCell(cell, newValue);
 
+      saveGameState();
       updateInventoryDisplay();
       renderGrid();
       alert(`✨ Crafted token of value ${newValue}!`);
@@ -381,6 +384,68 @@ function removeCell(cell: Cell): void {
   cellCache.delete(key);
 }
 */
+
+// ============================================================================
+// GAME STATE PERSISTENCE (localStorage)
+// ============================================================================
+
+const SAVE_KEY = "world-of-bits-save";
+
+interface SaveData {
+  playerLocation: Cell;
+  playerInventory: number | null;
+  cellCache: Array<CellMemento>; // Convert Map to Array for JSON
+}
+
+function saveGameState(): void {
+  const saveData: SaveData = {
+    playerLocation: gameState.playerLocation,
+    playerInventory: gameState.playerInventory,
+    cellCache: Array.from(cellCache.values()),
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+}
+
+function _loadGameState(): boolean {
+  const saved = localStorage.getItem(SAVE_KEY);
+  if (!saved) return false;
+
+  try {
+    const saveData: SaveData = JSON.parse(saved);
+
+    // Restore player state
+    gameState.playerLocation = saveData.playerLocation;
+    gameState.playerInventory = saveData.playerInventory;
+
+    // Restore cell cache
+    cellCache.clear();
+    saveData.cellCache.forEach((memento) => {
+      const key = getCellKey({ i: memento.i, j: memento.j });
+      cellCache.set(key, memento);
+    });
+
+    return true;
+  } catch (e) {
+    console.error("Failed to load save:", e);
+    return false;
+  }
+}
+
+function _resetGameState(): void {
+  // Clear everything
+  localStorage.removeItem(SAVE_KEY);
+  gameState.playerLocation = latLngToCell(CLASSROOM_LOCATION);
+  gameState.playerInventory = null;
+  gameState.cellTokens.clear();
+  cellCache.clear();
+
+  // Reset map view
+  map.setView(CLASSROOM_LOCATION, GAMEPLAY_ZOOM_LEVEL);
+  playerMarker.setLatLng(CLASSROOM_LOCATION);
+
+  updateInventoryDisplay();
+  renderGrid();
+}
 
 // ============================================================================
 // INITIALIZATION

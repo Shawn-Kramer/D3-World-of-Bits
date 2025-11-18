@@ -25,3 +25,11 @@ A lot of D3.b already got completed in D3.a. Oops!
 [x] Update token initialization to check cache before generating default state
 [x] Update click handler to save token states
 [x] Refactor grid rendering to keep memory clean
+
+## D3.d
+
+[x] Implement localStorage
+[x] Save states
+[ ] Update movement system
+[ ] Add movement toggle UI
+[ ] Load save on startup
